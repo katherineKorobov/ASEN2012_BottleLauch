@@ -156,13 +156,25 @@ function [initialConditions, statevector_0] = initializeVar(const)
     statevector_0 = [const.x0, const.v0, const.z0, const.v0, initialConditions.m0_rocket, initialConditions.V0_air, initialConditions.m0_air];
 
 end
+%% Thrust Calculation Function
+function [thrust] = thrustCalc(t, statevector, const, initialConditions)
+     thrust = zeros(length(t), 1);
+
+     for j = 1:length(t)
+        %Calculate thrust using bottleMotion
+        [~, thrust_temp, ~] = bottleMotion(t(j), statevector(j, :), const, initialConditions);
+
+        %Store thrust value (ensure thrust_temp is scalar)
+        thrust(j) = norm(thrust_temp, 2);
+     end
+end
 %% Initialize variables
 const = setConst();
 
 %Create Looping Vectors
 allPressures = [35, 40, 45, 50, 55, 68];
 allM0Water = [];
-allCd = [];
+allCd = [0.3, 0.35, 0.40, 0.45, 0.5, 0.6];
 allTheta0 = [];
 
 %Define Integration Time
@@ -170,8 +182,7 @@ final_time = 5;
 tspan = [0, final_time];
 
 %% Explore Pressure
-
-figure('Name','Varying Pressure Thrust')
+figure('Name','Rocket Trajectory for Varying Initial Air Pressures')
 hold on;
 title('Rocket Trajectory for Varying Initial Air Pressures');
 xlabel('Horizontal Position (m)');
@@ -179,10 +190,10 @@ ylabel('Vertical Position (m)');
 ylim([0, 35]);
 grid on;
 
-figure('Name','Varying Pressure Trajectory');
+figure('Name','Thrust Over Time for Varying Initial Air Pressures');
 hold on;
 hold on;
-title('Thrust Over Time');
+title('Thrust Over Time for Varying Initial Air Pressures');
 xlabel('Time (s)');
 ylabel('Thrust (N)');
 xlim([0 0.2]);
@@ -197,42 +208,77 @@ for i = 1:length(allPressures)
 
     figure(1);
     plot(statevector(:, 1), statevector(:, 3));
-
-    %Loop through each row of statevector
-    thrust = zeros(length(t), 1);
-    for j = 1:length(t)
-        %Calculate thrust using bottleMotion
-        [~, thrust_temp, ~] = bottleMotion(t(j), statevector(j, :), const, initialConditions);
-
-        %Store thrust value (ensure thrust_temp is scalar)
-        thrust(j) = norm(thrust_temp, 2);
-    end
-
+    
+    thrust = thrustCalc(t, statevector, const, initialConditions);
+    
     figure(2);
     plot(t, thrust);
 end
-
 figure(1);
-legend('Pressure = 35Pa', 'Pressure = 40Pa', 'Pressure = 45Pa', 'Pressure = 50Pa', 'Pressure = 55Pa', 'Pressure = 68Pa', 'Location','northwest');
+legend('Pressure = 35psi', 'Pressure = 40psi', 'Pressure = 45psi', 'Pressure = 50psi', 'Pressure = 55psi', 'Pressure = 68psi', 'Location','northwest');
 hold off;
 
 figure(2);
-legend('Pressure = 35Pa', 'Pressure = 40Pa', 'Pressure = 45Pa', 'Pressure = 50Pa', 'Pressure = 55', 'Pressure = 68', 'Location','northeast');
+legend('Pressure = 35psi', 'Pressure = 40psi', 'Pressure = 45psi', 'Pressure = 50psi', 'Pressure = 55psi', 'Pressure = 68psi', 'Location','northeast');
 hold off;
+
+%% Explore Initial Water Mass
+
+
 
 for i = 1:length(allM0Water)
     
 end
 
+%% Explore Coefficient of Drag
+
+figure('Name','Rocket Trajectory for Varying Coefficient of Drag')
+hold on;
+title('Rocket Trajectory for Varying Coefficient of Drag');
+xlabel('Horizontal Position (m)');
+ylabel('Vertical Position (m)');
+ylim([0, 35]);
+grid on;
+
+figure('Name','Thrust Over Time for Varying Coefficients of Drag');
+hold on;
+title('Thrust Over Time for Varying Coefficients of Drag');
+xlabel('Time (s)');
+ylabel('Thrust (N)');
+xlim([0 0.2]);
+grid on;
+
 for i = 1:length(allCd)
-    %const.Cd = allCd(i);
+    const.Cd = allCd(i);
     
-    %[initialConditions, statevector_0] = initializeVar(const);
+    [initialConditions, statevector_0] = initializeVar(const);
 
     %Going to create a statevector
-    %[t,statevector] = ode45(@(t,statevector) bottleMotion(t,statevector, const, initialConditions), tspan, statevector_0);
+    [t,statevector] = ode45(@(t,statevector) bottleMotion(t,statevector, const, initialConditions), tspan, statevector_0);
+
+    figure(3);
+    plot(statevector(:, 1), statevector(:, 3));
+
+     %Loop through each row of statevector
+    thrust = thrustCalc(t, statevector, const, initialConditions);
+    
+    figure(4);
+    plot(t, thrust);
 
 end
+
+[0.3, 0.35, 0.40, 0.45, 0.5, 0.6];
+
+figure(3);
+legend('Cd = 0.3', 'Cd = 0.35', 'Cd = 0.4', 'Cd = 0.45', 'Cd = 0.5', 'Cd = 0.6', 'Location','northwest');
+hold off;
+
+figure(4);
+legend('Cd = 0.3', 'Cd = 0.35', 'Cd = 0.4', 'Cd = 0.45', 'Cd = 0.5', 'Cd = 0.6', 'Location','northeast');
+hold off;
+
+%% Explore Launch Angle
+
 
 for i = 1:length(allTheta0)
     const.Theta0 = allTheta0(i);
@@ -250,59 +296,9 @@ for i = 1:length(allTheta0)
 
 end
 
-
-%we are gonna have lots of plots, so make sure we are printing them and
-%saving them maybe to an images folder with an appropriate title?
-
 %how to tell when each phase is when?
 %return phase number in bottle function
 %do diff to find change because 3-2 = 1 find diff(1) which gives indices of phase change to get time
 
 %initial volume of water has optimal value, also too much water (gauge
 %pressure goes negative) which will cause model to break (Limitation of model!!)
-
-
-%% Plot Results
-%Initialize thrust array
-%thrust = zeros(size(statevector, 1), 1);
-
-% Loop through each row of statevector
-%for i = 1:size(statevector, 1)
-    % Calculate thrust using bottleMotion
- %   [~, thrust_temp, phase] = bottleMotion(t(i), statevector(i, :), const, initialConditions);
-
-    % Store thrust value (ensure thrust_temp is scalar)
-  %  thrust(i) = norm(thrust_temp, 2);
-%end
-
-%load('project2verification.mat');
-
-%Position Plot
-%figure();
-%hold on;
-%plot(statevector(:, 1), statevector(:, 3), 'c-');
-%plot(verification.distance, verification.height, 'k--');
-%legend('Simulated Code', 'Verification', 'Location', 'northwest');
-%title('Rocket Trajectory');
-%xlabel('Horizontal Position (m)');
-%ylabel('Vertical Position (m)');
-%grid on;
-%hold off;
-
-%Thrust
-%figure();
-%hold on;
-%plot(t, thrust, 'c-');
-%plot(verification.time, verification.thrust, 'k--');
-%legend('Simulated Code', 'Verification', 'Location', 'best');
-%title('Thrust Over Time');
-%xlabel('Times (s)');
-%ylabel('Thrust (N)');
-%grid on;
-%xlim([0 0.2]);
-%hold off;
-
-%% Saved Variables
- %maxThrust = max(thrust); 
- %maxHeight = max(statevector(:,3)); 
- %maxDistance = max(statevector(:,1));
