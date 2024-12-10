@@ -2,7 +2,9 @@
 Author: Katherine Korobov, Alexander Lu
 Assignment: Project 2 Part 2
 Purpose: Simulate a bottle rocket with water expulsion using physics
-principles and ode45.
+principles and ode45. We will explore how different parameters affect
+the trajectory and resulting thrust of the bottle rocket. Then, we will hit
+a target 92m away with an range of +-1m.
 %}
 
 clc;
@@ -172,10 +174,10 @@ end
 const = setConst();
 
 %Create Looping Vectors
-allPressures = [35, 40, 45, 50, 55, 68];
-allM0Water = [];
+allPressures = [35, 40, 45, 50, 55, 68]; %[psi] Units Converted Later
+allV0Water = [0.0002, 0.0005, 0.0008]; %[m^3];
 allCd = [0.3, 0.35, 0.40, 0.45, 0.5, 0.6];
-allTheta0 = [10, 20, 40, 60, 80];
+allTheta0 = [10, 20, 40, 60, 80]; %[Degree]
 
 %Define Integration Time
 final_time = 10;
@@ -222,13 +224,51 @@ figure(2);
 legend('Pressure = 35psi', 'Pressure = 40psi', 'Pressure = 45psi', 'Pressure = 50psi', 'Pressure = 55psi', 'Pressure = 68psi', 'Location','northeast');
 hold off;
 
-%% Explore Initial Water Mass
+%% Explore Initial Water Mass 
+% Note: The density of water does not change, nor would it make sense to
+% change it because it is a physical property of the material. Instead we
+% will vary the values of the initial volume of the water inside the
+% bottle.
 
+figure('Name','Rocket Trajectory for Varying Initial Water Masses')
+hold on;
+title('Rocket Trajectory for Varying Initial Water Masses');
+xlabel('Horizontal Position (m)');
+ylabel('Vertical Position (m)');
+ylim([0, 35]);
+grid on;
 
+figure('Name','Thrust Over Time for Varying Initial Water Masses');
+hold on;
+hold on;
+title('Thrust Over Time for Varying Initial Water Masses');
+xlabel('Time (s)');
+ylabel('Thrust (N)');
+xlim([0 0.2]);
+grid on;
 
-for i = 1:length(allM0Water)
+for i = 1:length(allV0Water)
+    const.V0_water = allV0Water(i);
+    [initialConditions, statevector_0] = initializeVar(const);
+
+    %Simulate using ode45
+    [t,statevector] = ode45(@(t,statevector) bottleMotion(t,statevector, const, initialConditions), tspan, statevector_0);
+
+    figure(3);
+    plot(statevector(:, 1), statevector(:, 3));
     
+    thrust = thrustCalc(t, statevector, const, initialConditions);
+
+    figure(4);
+    plot(t, thrust);
 end
+figure(3);
+legend('Volume = 0.0002', 'Volume = 0.0005', 'Location','northwest');
+hold off;
+
+figure(4);
+legend('Volume = 0.0002', 'Volume = 0.0005', 'Location','northeast');
+hold off;
 
 %% Explore Coefficient of Drag
 figure('Name','Rocket Trajectory for Varying Coefficient of Drag')
@@ -255,26 +295,25 @@ for i = 1:length(allCd)
     %Going to create a statevector
     [t,statevector] = ode45(@(t,statevector) bottleMotion(t,statevector, const, initialConditions), tspan, statevector_0);
 
-    figure(3);
+    figure(5);
     plot(statevector(:, 1), statevector(:, 3));
 
      %Loop through each row of statevector
     thrust = thrustCalc(t, statevector, const, initialConditions);
     
-    figure(4);
+    figure(6);
     plot(t, thrust);
 end
 
-figure(3);
+figure(5);
 legend('Cd = 0.3', 'Cd = 0.35', 'Cd = 0.4', 'Cd = 0.45', 'Cd = 0.5', 'Cd = 0.6', 'Location','northwest');
 hold off;
 
-figure(4);
+figure(6);
 legend('Cd = 0.3', 'Cd = 0.35', 'Cd = 0.4', 'Cd = 0.45', 'Cd = 0.5', 'Cd = 0.6', 'Location','northeast');
 hold off;
 
 %% Explore Launch Angle
-
 figure('Name','Rocket Trajectory for Varying Launch Angles')
 hold on;
 title('Rocket Trajectory for Varying Launch Angles');
@@ -299,21 +338,21 @@ for i = 1:length(allTheta0)
     %Going to create a statevector
     [t,statevector] = ode45(@(t,statevector) bottleMotion(t,statevector, const, initialConditions), tspan, statevector_0);
 
-    figure(5);
+    figure(7);
     plot(statevector(:, 1), statevector(:, 3));
 
      %Loop through each row of statevector
     thrust = thrustCalc(t, statevector, const, initialConditions);
     
-    figure(6);
+    figure(8);
     plot(t, thrust);
 end
 
-figure(5);
+figure(7);
 legend('Angle = 10', 'Angle = 20', 'Angle = 40', 'Angle = 60', 'Angle = 80', 'Location','northeast');
 hold off;
 
-figure(6);
+figure(8);
 legend('Angle = 10', 'Angle = 20', 'Angle = 40', 'Angle = 60', 'Angle = 80', 'Location','northeast');
 hold off;
 
@@ -323,3 +362,5 @@ hold off;
 
 %initial volume of water has optimal value, also too much water (gauge
 %pressure goes negative) which will cause model to break (Limitation of model!!)
+
+
