@@ -175,10 +175,10 @@ const = setConst();
 allPressures = [35, 40, 45, 50, 55, 68];
 allM0Water = [];
 allCd = [0.3, 0.35, 0.40, 0.45, 0.5, 0.6];
-allTheta0 = [];
+allTheta0 = [10, 20, 40, 60, 80];
 
 %Define Integration Time
-final_time = 5;
+final_time = 10;
 tspan = [0, final_time];
 
 %% Explore Pressure
@@ -231,7 +231,6 @@ for i = 1:length(allM0Water)
 end
 
 %% Explore Coefficient of Drag
-
 figure('Name','Rocket Trajectory for Varying Coefficient of Drag')
 hold on;
 title('Rocket Trajectory for Varying Coefficient of Drag');
@@ -264,10 +263,7 @@ for i = 1:length(allCd)
     
     figure(4);
     plot(t, thrust);
-
 end
-
-[0.3, 0.35, 0.40, 0.45, 0.5, 0.6];
 
 figure(3);
 legend('Cd = 0.3', 'Cd = 0.35', 'Cd = 0.4', 'Cd = 0.45', 'Cd = 0.5', 'Cd = 0.6', 'Location','northwest');
@@ -279,22 +275,47 @@ hold off;
 
 %% Explore Launch Angle
 
+figure('Name','Rocket Trajectory for Varying Launch Angles')
+hold on;
+title('Rocket Trajectory for Varying Launch Angles');
+xlabel('Horizontal Position (m)');
+ylabel('Vertical Position (m)');
+ylim([0, 50]);
+grid on;
+
+figure('Name','Thrust Over Time for Varying Launch Angles');
+hold on;
+title('Thrust Over Time for Varying Launch Angles');
+xlabel('Time (s)');
+ylabel('Thrust (N)');
+xlim([0 0.2]);
+grid on;
 
 for i = 1:length(allTheta0)
     const.Theta0 = allTheta0(i);
 
-    %[initialConditions, statevector_0] = initializeVar(const);
+    [initialConditions, statevector_0] = initializeVar(const);
 
     %Going to create a statevector
-    %[t,statevector] = ode45(@(t,statevector) bottleMotion(t,statevector, const, initialConditions), tspan, statevector_0);
+    [t,statevector] = ode45(@(t,statevector) bottleMotion(t,statevector, const, initialConditions), tspan, statevector_0);
 
-    %find thrust
+    figure(5);
+    plot(statevector(:, 1), statevector(:, 3));
 
-    %plot results. can plot multipel curves on the graph for trajectory and
-    %thrust
-
-
+     %Loop through each row of statevector
+    thrust = thrustCalc(t, statevector, const, initialConditions);
+    
+    figure(6);
+    plot(t, thrust);
 end
+
+figure(5);
+legend('Angle = 10', 'Angle = 20', 'Angle = 40', 'Angle = 60', 'Angle = 80', 'Location','northeast');
+hold off;
+
+figure(6);
+legend('Angle = 10', 'Angle = 20', 'Angle = 40', 'Angle = 60', 'Angle = 80', 'Location','northeast');
+hold off;
 
 %how to tell when each phase is when?
 %return phase number in bottle function
