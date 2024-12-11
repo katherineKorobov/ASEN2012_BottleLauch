@@ -184,7 +184,7 @@ final_time = 10;
 tspan = [0, final_time];
 
 %% Explore Pressure
-figure('Name','Rocket Trajectory for Varying Initial Air Pressures')
+fig1 = figure('Name','Rocket Trajectory for Varying Initial Air Pressures');
 hold on;
 title('Rocket Trajectory for Varying Initial Air Pressures');
 xlabel('Horizontal Position (m)');
@@ -192,7 +192,7 @@ ylabel('Vertical Position (m)');
 ylim([0, 35]);
 grid on;
 
-figure('Name','Thrust Over Time for Varying Initial Air Pressures');
+fig2 = figure('Name','Thrust Over Time for Varying Initial Air Pressures');
 hold on;
 hold on;
 title('Thrust Over Time for Varying Initial Air Pressures');
@@ -230,7 +230,7 @@ hold off;
 % will vary the values of the initial volume of the water inside the
 % bottle.
 
-figure('Name','Rocket Trajectory for Varying Initial Water Masses')
+fig3 = figure('Name','Rocket Trajectory for Varying Initial Water Masses');
 hold on;
 title('Rocket Trajectory for Varying Initial Water Masses');
 xlabel('Horizontal Position (m)');
@@ -238,7 +238,7 @@ ylabel('Vertical Position (m)');
 ylim([0, 35]);
 grid on;
 
-figure('Name','Thrust Over Time for Varying Initial Water Masses');
+fig4 = figure('Name','Thrust Over Time for Varying Initial Water Masses');
 hold on;
 hold on;
 title('Thrust Over Time for Varying Initial Water Masses');
@@ -263,15 +263,15 @@ for i = 1:length(allV0Water)
     plot(t, thrust);
 end
 figure(3);
-legend('Volume = 0.0002', 'Volume = 0.0005', 'Location','northwest');
+legend('Volume = 0.0002', 'Volume = 0.0005', 'Volume = 0.0008', 'Location','northwest');
 hold off;
 
 figure(4);
-legend('Volume = 0.0002', 'Volume = 0.0005', 'Location','northeast');
+legend('Volume = 0.0002', 'Volume = 0.0005', 'Volume = 0.0008','Location','northeast');
 hold off;
 
 %% Explore Coefficient of Drag
-figure('Name','Rocket Trajectory for Varying Coefficient of Drag')
+fig5 = figure('Name','Rocket Trajectory for Varying Coefficient of Drag');
 hold on;
 title('Rocket Trajectory for Varying Coefficient of Drag');
 xlabel('Horizontal Position (m)');
@@ -279,7 +279,7 @@ ylabel('Vertical Position (m)');
 ylim([0, 35]);
 grid on;
 
-figure('Name','Thrust Over Time for Varying Coefficients of Drag');
+fig6 = figure('Name','Thrust Over Time for Varying Coefficients of Drag');
 hold on;
 title('Thrust Over Time for Varying Coefficients of Drag');
 xlabel('Time (s)');
@@ -314,7 +314,7 @@ legend('Cd = 0.3', 'Cd = 0.35', 'Cd = 0.4', 'Cd = 0.45', 'Cd = 0.5', 'Cd = 0.6',
 hold off;
 
 %% Explore Launch Angle
-figure('Name','Rocket Trajectory for Varying Launch Angles')
+fig7 = figure('Name','Rocket Trajectory for Varying Launch Angles');
 hold on;
 title('Rocket Trajectory for Varying Launch Angles');
 xlabel('Horizontal Position (m)');
@@ -322,7 +322,7 @@ ylabel('Vertical Position (m)');
 ylim([0, 50]);
 grid on;
 
-figure('Name','Thrust Over Time for Varying Launch Angles');
+fig8 = figure('Name','Thrust Over Time for Varying Launch Angles');
 hold on;
 title('Thrust Over Time for Varying Launch Angles');
 xlabel('Time (s)');
@@ -359,8 +359,3 @@ hold off;
 %how to tell when each phase is when?
 %return phase number in bottle function
 %do diff to find change because 3-2 = 1 find diff(1) which gives indices of phase change to get time
-
-%initial volume of water has optimal value, also too much water (gauge
-%pressure goes negative) which will cause model to break (Limitation of model!!)
-
-
