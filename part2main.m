@@ -45,8 +45,6 @@ function [d_statevector_dt, Fthrust, phaseNumber] = bottleMotion(t, statevector,
     V_air = statevector(6);
     m_air = statevector(7);
 
-    phaseNumber = 0;
-
     %Compute Velocity Magnitude and Heading
     mag_vel = sqrt((x_vel)^2 + (z_vel)^2);
 
@@ -56,7 +54,7 @@ function [d_statevector_dt, Fthrust, phaseNumber] = bottleMotion(t, statevector,
         h_hat = [x_vel / mag_vel, z_vel / mag_vel];
    end
 
-    exit_area = pi * (const.exitD / 2)^2; %Exit Cross Sectional Area
+    exit_area = pi * (const.exitD / 2)^2; %Exit Area
     normal_area = pi * (const.bottleD / 2)^2; %Cross Sectional Area
 
     %Compute Air Pressure Using Isentropic Expansion
@@ -64,7 +62,7 @@ function [d_statevector_dt, Fthrust, phaseNumber] = bottleMotion(t, statevector,
 
     %End Conditions of Air Expansion
     p_end = const.p0 * (initialConditions.V0_air / const.VemptyB)^const.gamma; %Equation 14
-    p2_air = p_end * (m_air / initialConditions.m0_air)^const.gamma; %Equation 16 
+    p2_air = p_end * (m_air / initialConditions.m0_air)^const.gamma; %Equation 16 **
 
     if(V_air <= const.VemptyB) %Phase 1: Water is Expelled From Bottle
         %Calculate Exit Velocity
@@ -82,7 +80,6 @@ function [d_statevector_dt, Fthrust, phaseNumber] = bottleMotion(t, statevector,
         mdot_rocket = -(m_dotwater); %Equation 11
         mdot_air = 0; %Mass of Air Remains Constant
 
-        %Return Phase Number
         phaseNumber = 1;
 
     elseif((p2_air >= const.Pa)  && (V_air >= const.VemptyB)) %Phase 2: Air Expansion
@@ -113,7 +110,6 @@ function [d_statevector_dt, Fthrust, phaseNumber] = bottleMotion(t, statevector,
         mdot_rocket = -(mdot_air);
         mdot_air = -(mdot_air); %Redfine for State Vector 
 
-        %Return Phase Number
         phaseNumber = 2;
 
     else %Ballistic Phase
@@ -122,13 +118,13 @@ function [d_statevector_dt, Fthrust, phaseNumber] = bottleMotion(t, statevector,
          Vdot_air = 0;
          mdot_air = 0;
 
+         phaseNumber = 3;
+
          if(z_pos <= 0)
              d_statevector_dt = [0; 0; 0; 0; 0; 0; 0]; %Goes Below Ground, Nothing Changes
              return;
          end
 
-         %Return Phase Number
-         phaseNumber = 3;
     end
 
     %Compute Drag
@@ -144,8 +140,7 @@ function [d_statevector_dt, Fthrust, phaseNumber] = bottleMotion(t, statevector,
     a =  Fnet / m_rocket; 
     
     %Create Derivative of State Vector to be Put into ode45
-    d_statevector_dt = [x_vel; a(1); z_vel; a(2); mdot_rocket; Vdot_air; mdot_air];
-    
+    d_statevector_dt = [x_vel; a(1); z_vel; a(2); mdot_rocket; Vdot_air; mdot_air];    
 end
 %% Initial Conditions Function
 function [initialConditions, statevector_0] = initializeVar(const)
@@ -156,10 +151,9 @@ function [initialConditions, statevector_0] = initializeVar(const)
 
     %Define Initial Statevector: statevector = [x, v_x, z, v_z, m_r, volume_air, m_air];
     statevector_0 = [const.x0, const.v0, const.z0, const.v0, initialConditions.m0_rocket, initialConditions.V0_air, initialConditions.m0_air];
-
 end
 %% Thrust Calculation Function
-function [thrust] = thrustCalc(t, statevector, const, initialConditions)
+function [thrust] = getThrust(t, statevector, const, initialConditions)
      thrust = zeros(length(t), 1);
 
      for j = 1:length(t)
@@ -211,7 +205,7 @@ for i = 1:length(allPressures)
     figure(1);
     plot(statevector(:, 1), statevector(:, 3));
     
-    thrust = thrustCalc(t, statevector, const, initialConditions);
+    thrust = getThrust(t, statevector, const, initialConditions);
     
     figure(2);
     plot(t, thrust);
@@ -257,7 +251,7 @@ for i = 1:length(allV0Water)
     figure(3);
     plot(statevector(:, 1), statevector(:, 3));
     
-    thrust = thrustCalc(t, statevector, const, initialConditions);
+    thrust = getThrust(t, statevector, const, initialConditions);
 
     figure(4);
     plot(t, thrust);
@@ -299,7 +293,7 @@ for i = 1:length(allCd)
     plot(statevector(:, 1), statevector(:, 3));
 
      %Loop through each row of statevector
-    thrust = thrustCalc(t, statevector, const, initialConditions);
+    thrust = getThrust(t, statevector, const, initialConditions);
     
     figure(6);
     plot(t, thrust);
@@ -342,7 +336,7 @@ for i = 1:length(allTheta0)
     plot(statevector(:, 1), statevector(:, 3));
 
      %Loop through each row of statevector
-    thrust = thrustCalc(t, statevector, const, initialConditions);
+    thrust = getThrust(t, statevector, const, initialConditions);
     
     figure(8);
     plot(t, thrust);
@@ -356,6 +350,77 @@ figure(8);
 legend('Angle = 10', 'Angle = 20', 'Angle = 40', 'Angle = 60', 'Angle = 80', 'Location','northeast');
 hold off;
 
-%how to tell when each phase is when?
-%return phase number in bottle function
-%do diff to find change because 3-2 = 1 find diff(1) which gives indices of phase change to get time
+%% Hitting the Target 
+
+%Lets use a range of values and then interpolate to find an exact number
+
+%Let us do it const.p0 first
+
+rangePressure0 = linspace(40:70, 100);
+
+required_distance = 92; %[m]
+
+%do a linspace of looping parameters, linspace of at least 100
+%define range of values for parameter
+%for loop
+ %   send to ode45
+  %  calc max range pu tinto vector
+
+   % interp for required distance using linear
+
+
+
+const = setConst(); %reset
+
+[initialConditions, statevector_0] = initializeVar(const);
+
+[t,statevector] = ode45(@(t,statevector) bottleMotion(t,statevector, const, initialConditions), tspan, statevector_0);
+
+thrust = getThrust(t, statevector, const, initialConditions);
+
+%get phases
+phases = zeros(length(t), 1);
+for i = 1:length(t)
+    [~, ~, phases(i)] = bottleMotion(t(i), statevector(i, :), const, initialConditions);
+end
+
+phaseChange1  = find(phases == 2, 1);
+phaseChange2 = find(phases == 3, 1);
+
+phaseChange1Time = t(phaseChange1);
+phaseChange2Time = t(phaseChange2);
+
+figure('Name','Target Trajectory');
+hold on;
+plot(statevector(:, 1), statevector(:, 3));
+xline(phaseChange1Time, 'r--'); % Phase 1 -> 2
+xline(phaseChange2Time, 'r--'); % Phase 2 -> 3
+title('Rocket Trajectory');
+xlabel('Horizontal Position (m)');
+ylabel('Vertical Position (m)');
+grid on;
+hold off;
+
+%Thrust
+figure('Name', 'Target Thrust');
+hold on;
+plot(t, thrust);
+xline(phaseChange1Time, 'r--'); % Phase 1 -> 2
+xline(phaseChange2Time, 'r--'); % Phase 2 -> 3
+title('Thrust Over Time');
+xlabel('Times (s)');
+ylabel('Thrust (N)');
+grid on;
+xlim([0 0.2]);
+hold off;
+
+
+%do a linspace of looping parameters, linspace of at least 100
+%define range of values for parameter
+%for loop
+ %   send to ode45
+  %  calc max range pu tinto vector
+
+   % interp for required distance using linear
+
+
