@@ -350,33 +350,43 @@ figure(8);
 legend('Angle = 10', 'Angle = 20', 'Angle = 40', 'Angle = 60', 'Angle = 80', 'Location','northeast');
 hold off;
 
-%% Hitting the Target 
-
+%% Interpolate for exact value to hit target
 %Lets use a range of values and then interpolate to find an exact number
+const = setConst();
 
-%Let us do it const.p0 first
-
-rangePressure0 = linspace(40:70, 100);
+pressureRange0 = linspace(50, 100, 100); %[psi]
 
 required_distance = 92; %[m]
 
-%do a linspace of looping parameters, linspace of at least 100
-%define range of values for parameter
-%for loop
- %   send to ode45
-  %  calc max range pu tinto vector
+max_ranges = zeros(length(pressureRange0), 1);
 
-   % interp for required distance using linear
+for i = 1:length(pressureRange0)
+    const.p0 = (pressureRange0(i) + 12.1) * 6894.76; %[Pa]
+
+    [initialConditions, statevector_0] = initializeVar(const);
+
+    % Simulate using ode45
+    [~, statevector] = ode45(@(t, statevector) bottleMotion(t, statevector, const, initialConditions), tspan, statevector_0);
+
+    % Record the maximum horizontal distance
+    max_ranges(i) = max(statevector(:, 1));
+end
+
+% Interpolate to find the pressure that gives the target range
+targetPressure = interp1(max_ranges, pressureRange0, required_distance, 'linear');
 
 
-
-const = setConst(); %reset
+%% Hit Target
+const = setConst();
+const.p0 = (targetPressure + 12.1) * 6894.76;
 
 [initialConditions, statevector_0] = initializeVar(const);
 
 [t,statevector] = ode45(@(t,statevector) bottleMotion(t,statevector, const, initialConditions), tspan, statevector_0);
 
 thrust = getThrust(t, statevector, const, initialConditions);
+
+test_range = max(statevector(:, 1));
 
 %get phases
 phases = zeros(length(t), 1);
@@ -399,6 +409,7 @@ title('Rocket Trajectory');
 xlabel('Horizontal Position (m)');
 ylabel('Vertical Position (m)');
 grid on;
+ylim([0 30]);
 hold off;
 
 %Thrust
@@ -413,14 +424,3 @@ ylabel('Thrust (N)');
 grid on;
 xlim([0 0.2]);
 hold off;
-
-
-%do a linspace of looping parameters, linspace of at least 100
-%define range of values for parameter
-%for loop
- %   send to ode45
-  %  calc max range pu tinto vector
-
-   % interp for required distance using linear
-
-
