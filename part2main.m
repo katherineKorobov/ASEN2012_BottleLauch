@@ -232,7 +232,6 @@ grid on;
 
 fig4 = figure('Name','Thrust Over Time for Varying Initial Water Masses');
 hold on;
-hold on;
 title('Thrust Over Time for Varying Initial Water Masses');
 xlabel('Time (s)');
 ylabel('Thrust (N)');
