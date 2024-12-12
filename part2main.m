@@ -34,7 +34,7 @@ function [const] = setConst()
     const.z0 = 0.25; %[m, initial vertical distance]
     const.standLength = 0.5; %[m, length of test stand]
 end
-%% Phase function that calculate d_dt statevector to be put into ode45
+%% Phase Function That Calculates d_dt statevector to be put into ode45
 function [d_statevector_dt, Fthrust, phaseNumber] = bottleMotion(t, statevector, const, initialConditions)
     %Devectorize:
     x_pos = statevector(1);
@@ -155,8 +155,7 @@ function [initialConditions, statevector_0] = initializeVar(const)
 end
 %% Thrust Calculation Function
 function [thrust] = getThrust(t, statevector, const, initialConditions)
-     thrust = zeros(length(t), 1);
-
+     thrust = zeros(length(t), 1); %Initialize thrust vector
      for j = 1:length(t)
         %Calculate thrust using bottleMotion
         [~, thrust_temp, ~] = bottleMotion(t(j), statevector(j, :), const, initialConditions);
@@ -179,6 +178,7 @@ final_time = 10;
 tspan = [0, final_time];
 
 %% Explore Pressure
+%Vary the values of the initial air pressure
 fig1 = figure('Name','Rocket Trajectory for Varying Initial Air Pressures');
 hold on;
 title('Rocket Trajectory for Varying Initial Air Pressures');
@@ -220,10 +220,7 @@ legend('Pressure = 35psi', 'Pressure = 40psi', 'Pressure = 45psi', 'Pressure = 5
 hold off;
 
 %% Explore Initial Water Mass 
-% Note: The density of water does not change, nor would it make sense to
-% change it because it is a physical property of the material. Instead we
-% will vary the values of the initial volume of the water inside the
-% bottle.
+%Vary the values of the initial volume of the water inside the bottle
 
 fig3 = figure('Name','Rocket Trajectory for Varying Initial Water Masses');
 hold on;
@@ -266,6 +263,7 @@ legend('Volume = 0.0002', 'Volume = 0.0005', 'Volume = 0.0008','Location','north
 hold off;
 
 %% Explore Coefficient of Drag
+%Vary the values of the coefficient of drag
 fig5 = figure('Name','Rocket Trajectory for Varying Coefficient of Drag');
 hold on;
 title('Rocket Trajectory for Varying Coefficient of Drag');
@@ -309,6 +307,7 @@ legend('Cd = 0.3', 'Cd = 0.35', 'Cd = 0.4', 'Cd = 0.45', 'Cd = 0.5', 'Cd = 0.6',
 hold off;
 
 %% Explore Launch Angle
+%Vary the values of the launch angle
 fig7 = figure('Name','Rocket Trajectory for Varying Launch Angles');
 hold on;
 title('Rocket Trajectory for Varying Launch Angles');
@@ -351,8 +350,8 @@ figure(8);
 legend('Angle = 10', 'Angle = 20', 'Angle = 45', 'Angle = 60', 'Angle = 80', 'Location','northeast');
 hold off;
 
-%% Interpolate for exact value to hit target
-%Lets use a range of values and then interpolate to find an exact number
+%% Interpolate for Approximated Value to Hit Target
+%Use a range of values and then interpolate to find an exact number
 const = setConst();
 
 pressureRange0 = linspace(50, 100, 100); %[psi]
