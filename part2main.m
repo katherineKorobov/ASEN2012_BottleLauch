@@ -393,9 +393,11 @@ for i = 1:length(t)
     [~, ~, phases(i)] = bottleMotion(t(i), statevector(i, :), const, initialConditions);
 end
 
+%Find the first phase 2 and 3 index
 phaseChange1  = find(phases == 2, 1);
 phaseChange2 = find(phases == 3, 1);
 
+%Find corresponding values of time
 phaseChange1Time = t(phaseChange1);
 phaseChange2Time = t(phaseChange2);
 
@@ -404,7 +406,7 @@ hold on;
 plot(statevector(:, 1), statevector(:, 3));
 xline(phaseChange1Time, 'r--'); % Phase 1 -> 2
 xline(phaseChange2Time, 'r--'); % Phase 2 -> 3
-title('Rocket Trajectory');
+title('Target Rocket Trajectory');
 xlabel('Horizontal Position (m)');
 ylabel('Vertical Position (m)');
 grid on;
@@ -417,7 +419,7 @@ hold on;
 plot(t, thrust);
 xline(phaseChange1Time, 'r--'); % Phase 1 -> 2
 xline(phaseChange2Time, 'r--'); % Phase 2 -> 3
-title('Thrust Over Time');
+title('Target Thrust Over Time');
 xlabel('Times (s)');
 ylabel('Thrust (N)');
 grid on;
