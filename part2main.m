@@ -144,6 +144,7 @@ function [d_statevector_dt, Fthrust, phaseNumber] = bottleMotion(t, statevector,
 end
 %% Initial Conditions Function
 function [initialConditions, statevector_0] = initializeVar(const)
+    %Calculations for initial variables
     initialConditions.V0_air = const.VemptyB - const.V0_water; %[m^3] Initial Air Volume
     initialConditions.m0_water = const.rhoWater * const.V0_water; %[kg] Initial Water Mass
     initialConditions.m0_air = (const.p0 * initialConditions.V0_air) / (const.Rair * const.T0); %[kg] Ideal Gas Law
@@ -171,7 +172,7 @@ const = setConst();
 allPressures = [35, 40, 45, 50, 55, 68]; %[psi] Units Converted Later
 allV0Water = [0.0002, 0.0005, 0.0008]; %[m^3];
 allCd = [0.3, 0.35, 0.40, 0.45, 0.5, 0.6];
-allTheta0 = [10, 20, 40, 60, 80]; %[Degree]
+allTheta0 = [10, 20, 45, 60, 80]; %[Degree]
 
 %Define Integration Time
 final_time = 10;
@@ -343,11 +344,11 @@ for i = 1:length(allTheta0)
 end
 
 figure(7);
-legend('Angle = 10', 'Angle = 20', 'Angle = 40', 'Angle = 60', 'Angle = 80', 'Location','northeast');
+legend('Angle = 10', 'Angle = 20', 'Angle = 45', 'Angle = 60', 'Angle = 80', 'Location','northeast');
 hold off;
 
 figure(8);
-legend('Angle = 10', 'Angle = 20', 'Angle = 40', 'Angle = 60', 'Angle = 80', 'Location','northeast');
+legend('Angle = 10', 'Angle = 20', 'Angle = 45', 'Angle = 60', 'Angle = 80', 'Location','northeast');
 hold off;
 
 %% Interpolate for exact value to hit target
@@ -374,7 +375,6 @@ end
 
 % Interpolate to find the pressure that gives the target range
 targetPressure = interp1(max_ranges, pressureRange0, required_distance, 'linear');
-
 
 %% Hit Target
 const = setConst();
